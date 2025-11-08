@@ -1,0 +1,12 @@
+FROM postgis/postgis:16-3.4
+
+# Set environment variables
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=password
+ENV POSTGRES_DB=TransportSystemDB
+
+# Copy initialization scripts
+COPY init-scripts/ /docker-entrypoint-initdb.d/
+
+# Make sure scripts are executable (for .sh files)
+RUN chmod +x /docker-entrypoint-initdb.d/*.sh 2>/dev/null || true
