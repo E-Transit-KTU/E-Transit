@@ -1,19 +1,32 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import HomePage from "./pages/HomePage";
-import VehiclePage from "./pages/VehiclePage"
+import LoginPage from "./pages/LoginPage";
+import PassengerPage from "./pages/PassengerPage";
+import AdminPage from "./pages/AdminPage";
+import InspectorPage from "./pages/InspectorPage";
+import VehiclePage from "./pages/VehiclePage";
 
-export default function App() {
-    return (
-        <AuthProvider>
-            <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/routes" element={<div className="p-6">Routes Page</div>} />
-                    <Route path="/tickets" element={<div className="p-6">Tickets Page</div>} />
-                    <Route path="/vehicles" element={<VehiclePage />} />
-                </Routes>
-            </BrowserRouter>
-        </AuthProvider>
-    );
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Demo “logged in” pages */}
+          <Route path="/passenger" element={<PassengerPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/inspector" element={<InspectorPage />} />
+          <Route path="/driver" element={<VehiclePage />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<LoginPage />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }
+
+export default App;
