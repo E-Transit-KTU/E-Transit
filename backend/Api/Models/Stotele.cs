@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Api.Enums;
 
 namespace Api.Models
 {
@@ -28,7 +29,7 @@ namespace Api.Models
         [Required]
         [MaxLength(20)]
         [Column("tipas")]
-        public string Tipas { get; set; } = string.Empty; // Pradzios, Tarpine, Pabaigos
+        public StotelesTipas Tipas { get; set; } // Pradzios, Tarpine, Pabaigos
 
         // Navigation properties
         public ICollection<MarstrutoStotele> MarstrutoStoteles { get; set; } = new List<MarstrutoStotele>();
