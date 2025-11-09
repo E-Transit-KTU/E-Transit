@@ -18,6 +18,12 @@ namespace Api.Data
         public DbSet<Nuolaida> Nuolaidos  { get; set; }
         public DbSet<Bilietas> Bilietai { get; set; }
 
+        // Update DbSet to use Routes
+        public DbSet<Marsrutas> Marsrutai { get; set; }
+        public DbSet<Stotele> Stoteles { get; set; }
+        public DbSet<MarstrutoStotele> MarstrutoStoteles { get; set; }
+        public DbSet<Tvarkarastis> Tvarkarastiai { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
