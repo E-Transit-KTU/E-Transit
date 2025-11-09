@@ -20,7 +20,7 @@ const DISCOUNT_OPTIONS = [
 const PAYMENT_METHODS = [
   { value: "card", label: "Banko kortelė" },
   { value: "mobile", label: "Mobilus apmokėjimas" },
-  { value: "kiosk", label: "Kioskas / POS" },
+  { value: "G-Pay", label: "Google pay" },
 ];
 
 const TicketsPage: React.FC = () => {
