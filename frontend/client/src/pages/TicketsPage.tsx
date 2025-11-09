@@ -1,8 +1,7 @@
+// src/pages/TicketsPage.tsx
 import React, { useEffect, useState } from "react";
-import {
-  ticketService,
-  Ticket,
-} from "../services/TicketService";
+import { Link } from "react-router-dom";
+import { ticketService, Ticket } from "../services/TicketService";
 
 const statusLabels: Record<number, string> = {
   1: "Nupirktas",
@@ -11,32 +10,42 @@ const statusLabels: Record<number, string> = {
   4: "Negaliojantis",
 };
 
+const DISCOUNT_OPTIONS = [
+  { value: "", label: "Be nuolaidos" },
+  { value: "1", label: "Studento nuolaida" },
+  { value: "2", label: "Moksleivio nuolaida" },
+  { value: "3", label: "Senjoro nuolaida" },
+];
+
+const PAYMENT_METHODS = [
+  { value: "card", label: "Banko kortelė" },
+  { value: "mobile", label: "Mobilus apmokėjimas" },
+  { value: "kiosk", label: "Kioskas / POS" },
+];
+
 const TicketsPage: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // buy form
+  // buy
   const [email, setEmail] = useState("");
-  const [discountId, setDiscountId] = useState("");
+  const [selectedDiscount, setSelectedDiscount] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("card");
 
-  // mark form
+  // mark (this can stay, it’s still a passenger action in your system)
   const [markId, setMarkId] = useState("");
   const [markVehicle, setMarkVehicle] = useState("");
-
-  // validate form
-  const [valId, setValId] = useState("");
-  const [valVehicle, setValVehicle] = useState("");
-  const [valResult, setValResult] = useState<any>(null);
 
   const loadTickets = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await ticketService.getAll();
       setTickets(data);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || "Nepavyko gauti bilietų");
+    } catch (err) {
+      console.error(err);
+      setError("Nepavyko gauti bilietų sąrašo");
     } finally {
       setLoading(false);
     }
@@ -51,10 +60,12 @@ const TicketsPage: React.FC = () => {
     try {
       await ticketService.purchase({
         naudotojas: email || null,
-        nuolaidaId: discountId ? Number(discountId) : null,
+        nuolaidaId: selectedDiscount ? Number(selectedDiscount) : null,
+        // paymentMethod would go here if backend supports
       });
+
       setEmail("");
-      setDiscountId("");
+      setSelectedDiscount("");
       await loadTickets();
     } catch (err: any) {
       alert(err.message);
@@ -76,25 +87,29 @@ const TicketsPage: React.FC = () => {
     }
   };
 
-  const handleValidate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!valId) return;
-    try {
-      const res = await ticketService.validate(valId, {
-        transportoPriemonesKodas: valVehicle || null,
-      });
-      setValResult(res);
-    } catch (err: any) {
-      setValResult({ valid: false, reason: err.message });
-    }
-  };
-
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-bold mb-4 text-left">Bilietai</h1>
+      {/* header like VehiclePage */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-left">Bilietai</h1>
+        <div className="space-x-2">
+          <button
+            onClick={loadTickets}
+            className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-md text-sm"
+          >
+            Atnaujinti
+          </button>
+          <Link
+            to="/routes"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
+          >
+            Maršrutai
+          </Link>
+        </div>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-[1.3fr_0.7fr]">
-        {/* LEFT: ticket list */}
+        {/* LEFT: tickets list */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b">
             <h2 className="text-lg font-semibold">Visi bilietai</h2>
@@ -116,9 +131,7 @@ const TicketsPage: React.FC = () => {
               {tickets.map((t) => (
                 <li key={t.id} className="px-6 py-4 text-left">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-mono text-sm text-slate-800">
-                      {t.id}
-                    </span>
+                    <span className="font-mono text-sm text-slate-800">{t.id}</span>
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${
                         t.statusas === 2
@@ -172,13 +185,37 @@ const TicketsPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1">Nuolaidos ID (nebūtina)</label>
-                <input
+                <label className="block text-sm mb-1">Nuolaida</label>
+                <select
                   className="w-full border rounded px-2 py-1 text-sm"
-                  value={discountId}
-                  onChange={(e) => setDiscountId(e.target.value)}
-                  placeholder="1, 2..."
-                />
+                  value={selectedDiscount}
+                  onChange={(e) => setSelectedDiscount(e.target.value)}
+                >
+                  {DISCOUNT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Apmokėjimo būdas</label>
+                <div className="flex gap-2">
+                  {PAYMENT_METHODS.map((pm) => (
+                    <button
+                      key={pm.value}
+                      type="button"
+                      onClick={() => setPaymentMethod(pm.value)}
+                      className={`flex-1 text-sm px-2 py-1 border rounded-md ${
+                        paymentMethod === pm.value
+                          ? "bg-blue-50 border-blue-500 text-blue-700"
+                          : "bg-white"
+                      }`}
+                    >
+                      {pm.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <button
                 type="submit"
@@ -189,27 +226,27 @@ const TicketsPage: React.FC = () => {
             </form>
           </div>
 
-          {/* mark */}
+          {/* mark (pažymėti) */}
           <div className="bg-white rounded-lg shadow p-4 space-y-3">
             <h3 className="font-semibold">Pažymėti bilietą</h3>
             <form onSubmit={handleMark} className="space-y-3">
               <div>
                 <label className="block text-sm mb-1">Bilieto ID</label>
                 <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  value={markId}
-                  onChange={(e) => setMarkId(e.target.value)}
-                  required
-                  placeholder="Įklijuok bilieto ID"
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    value={markId}
+                    onChange={(e) => setMarkId(e.target.value)}
+                    required
+                    placeholder="Įklijuok bilieto ID"
                 />
               </div>
               <div>
                 <label className="block text-sm mb-1">Transporto priemonės kodas</label>
                 <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  value={markVehicle}
-                  onChange={(e) => setMarkVehicle(e.target.value)}
-                  placeholder="BUS-24"
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    value={markVehicle}
+                    onChange={(e) => setMarkVehicle(e.target.value)}
+                    placeholder="BUS-24"
                 />
               </div>
               <button
@@ -221,56 +258,7 @@ const TicketsPage: React.FC = () => {
             </form>
           </div>
 
-          {/* validate */}
-          <div className="bg-white rounded-lg shadow p-4 space-y-3">
-            <h3 className="font-semibold">Patikrinti bilietą</h3>
-            <form onSubmit={handleValidate} className="space-y-3">
-              <div>
-                <label className="block text-sm mb-1">Bilieto ID</label>
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  value={valId}
-                  onChange={(e) => setValId(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1">
-                  Transporto priemonės kodas (nebūtina)
-                </label>
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm"
-                  value={valVehicle}
-                  onChange={(e) => setValVehicle(e.target.value)}
-                  placeholder="BUS-24"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white text-sm px-3 py-1 rounded-md"
-              >
-                Tikrinti
-              </button>
-            </form>
-            {valResult && (
-              <div
-                className={`text-sm rounded p-2 ${
-                  valResult.valid
-                    ? "bg-green-50 text-green-700"
-                    : "bg-red-50 text-red-700"
-                }`}
-              >
-                <p>Galiojantis: {String(valResult.valid)}</p>
-                {valResult.reason && <p>Priežastis: {valResult.reason}</p>}
-                {valResult.expiresAt && (
-                  <p>
-                    Galioja iki:{" "}
-                    {new Date(valResult.expiresAt).toLocaleString()}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          {/* we REMOVED the validate/check block here */}
         </div>
       </div>
     </div>
